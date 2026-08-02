@@ -322,7 +322,7 @@ VortexGrid-Engine/
 │           └── loss_functions.py        # Fused memory cross-entropy loss
 ├── scripts/
 │   ├── setup_env.sh                    # Local environment bootstrap script
-│   ├── benchmark_scaling.py            #Scaling & throughput benchmark suite
+│   ├── benchmark_scaling.py            # Scaling & throughput benchmark suite
 │   ├── run_distributed_train.py        # Multi-GPU training pipeline entry
 │   └── run_hpo_sweep.py                # Distributed Optuna sweep executor
 ├── tests/
