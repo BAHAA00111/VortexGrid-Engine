@@ -299,7 +299,7 @@ VortexGrid-Engine/
 │       │   ├── distributed_context.py   # Process group rank 
 │       │   ├── fsdp_wrapper.py          # FSDP auto-wrap rules 
 │       │   ├── deepspeed_engine.py      # DeepSpeed engine builder 
-│       │   └── tensor_parallel.py        # Column & Row parallel linear layer
+│       │   └── tensor_parallel.py       # Column & Row parallel linear layer
 │       ├── checkpointing/               # State Sharding & Fault Recovery
 │       │   ├── async_sharded_saver.py   # Asynchronous multi-GPU 
 │       │   ├── state_loader.py          # Resilient optimizer 
@@ -322,8 +322,8 @@ VortexGrid-Engine/
 │           └── loss_functions.py        # Fused memory cross-entropy loss
 ├── scripts/
 │   ├── setup_env.sh                    # Local environment bootstrap script
-│   ├── benchmark_scaling.py           #Scaling & throughput benchmark suite
-│   ├── run_distributed_train.py       # Multi-GPU training pipeline entry
+│   ├── benchmark_scaling.py            #Scaling & throughput benchmark suite
+│   ├── run_distributed_train.py        # Multi-GPU training pipeline entry
 │   └── run_hpo_sweep.py                # Distributed Optuna sweep executor
 ├── tests/
 │   ├── unit/                            # System unit test suite
