@@ -105,4 +105,4 @@ class OptunaRunner:
         """Returns optimal hyperparameter parameters dictionary from finished study."""
         if len(self.study.trials) == 0:
             return {}
-        return self.study.best_params
+        return dict(self.study.best_params)

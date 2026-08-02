@@ -80,7 +80,7 @@ class MemoryProfiler:
                     )
 
     def _is_cuda_active(self) -> bool:
-        return torch.cuda.is_available() and self.device_index >= 0
+        return bool(torch.cuda.is_available() and self.device_index >= 0)
 
     def get_memory_stats(self) -> MemoryStats:
         """Captures real-time CUDA memory metrics and calculates fragmentation ratio."""

@@ -180,7 +180,7 @@ class RayLauncher:
         logger.info(
             f"Ray Job successfully submitted with Submission ID: '{submitted_id}'"
         )
-        return submitted_id
+        return str(submitted_id)
 
     def wait_for_job_completion(
         self,

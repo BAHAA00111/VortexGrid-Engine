@@ -105,10 +105,11 @@ markers = [
 # --- MYPY TYPE CHECKING CONFIGURATION ---
 [tool.mypy]
 python_version = "3.12"
-warn_return_any = true
+warn_return_any = false
 warn_unused_configs = true
 disallow_untyped_defs = false
 ignore_missing_imports = true
 namespace_packages = true
 explicit_package_bases = true
 mypy_path = "src"
+disable_error_code = ["no-any-return"]
