@@ -1,0 +1,36 @@
+fsdp_config:
+  sharding_strategy: "HYBRID_SHARD"
+  backward_prefetch: "BACKWARD_PRE"
+  forward_prefetch: true
+  limit_all_gathers: true
+  sync_module_states: true
+  use_orig_params: true
+
+  # Intra-node / Inter-node process group dimensions
+  hybrid_sharding_dimensions:
+    node_process_group_size: 8   # Shard across 8 GPUs locally (NVLink)
+    replica_process_group_size: "auto" # Scale DP across multiple nodes
+
+  # Mixed Precision Policies
+  mixed_precision:
+    param_dtype: "bfloat16"
+    reduce_dtype: "bfloat16"
+    buffer_dtype: "fp32"
+
+  # Activation / Gradient Checkpointing
+  activation_checkpointing:
+    enabled: true
+    selective: true
+    checkpoint_wrapper_targets:
+      - "TransformerBlock"
+
+  # CPU Offloading Policy
+  cpu_offload:
+    offload_params: false
+
+  # Auto Wrapping Policy configuration
+  auto_wrap_policy:
+    type: "transformer_auto_wrap_policy"
+    transformer_layer_cls:
+      - "TransformerBlock"
+    min_num_params: 10000000

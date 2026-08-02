@@ -1,0 +1,18 @@
+cluster:
+  address: "auto"
+  dashboard_url: "http://127.0.0.1:8265"
+
+worker_group:
+  num_workers: 4
+  gpus_per_worker: 1
+  cpus_per_worker: 8
+  placement_strategy: "SPREAD"
+
+runtime_env:
+  pip:
+    - torch>=2.1.0
+    - deepspeed>=0.12.0
+    - optuna>=3.4.0
+  env_vars:
+    NCCL_DEBUG: "INFO"
+    PYTHONUNBUFFERED: "1"

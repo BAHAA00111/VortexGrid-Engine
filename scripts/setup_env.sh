@@ -1,0 +1,159 @@
+set -eo pipefail
+
+# ANSI Color Codes for Terminal Output Formatting
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m' 
+
+log_info()    { echo -e "${BLUE}[INFO]${NC} $1"; }
+log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+log_warn()    { echo -e "${YELLOW}[WARN]${NC} $1"; }
+log_error()   { echo -e "${RED}[ERROR]${NC} $1"; }
+
+echo -e "${CYAN}"
+echo "          VortexGrid-Engine :: Environment Verification Pipeline       "
+echo -e "${NC}"
+
+
+# 1. Environment & Python Context Verification
+log_info "Verifying Python interpreter and virtual environment context..."
+
+CURRENT_PYTHON=$(which python)
+log_info "Python Path: ${CURRENT_PYTHON}"
+
+if [[ "${CURRENT_PYTHON}" != *"/torch_env/"* ]]; then
+    log_warn "Current Python is not inside 'torch_env'! Attempting to verify active context..."
+fi
+
+PYTHON_VERSION=$(python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}')")
+log_success "Python Version: ${PYTHON_VERSION}"
+
+
+# 2. CUDA Toolkit & NVIDIA Driver Runtime Check
+log_info "Checking NVIDIA Drivers & CUDA Toolkit installation..."
+
+if ! command -v nvidia-smi &> /dev/null; then
+    log_error "nvidia-smi could not be found. Ensure NVIDIA drivers are exposed inside Distrobox."
+    exit 1
+fi
+
+GPU_NAME=$(nvidia-smi --query-gpu=name --format=csv,noheader | head -n 1)
+DRIVER_VER=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | head -n 1)
+log_success "Detected GPU: ${GPU_NAME} (Driver: ${DRIVER_VER})"
+
+if command -v nvcc &> /dev/null; then
+    NVCC_VER=$(nvcc --version | grep "release" | awk '{print $5}' | sed 's/,//')
+    log_success "NVCC Compiler Version: ${NVCC_VER}"
+    export CUDA_HOME="${CUDA_HOME:-/usr/local/cuda}"
+else
+    log_warn "NVCC compiler not found in PATH. Setting default CUDA_HOME to /usr/local/cuda"
+    export CUDA_HOME="/usr/local/cuda"
+fi
+
+
+# 3. PyTorch CUDA Acceleration & NCCL Health Check
+log_info "Testing PyTorch CUDA availability and NCCL distributed backend..."
+
+python - << 'EOF'
+import sys
+import torch
+
+print(f"PyTorch Version: {torch.__version__}")
+print(f"PyTorch CUDA Compiled Version: {torch.version.cuda}")
+print(f"CUDA Available: {torch.cuda.is_available()}")
+
+if not torch.cuda.is_available():
+    print("\033[0;31m[ERROR] PyTorch cannot access CUDA GPUs!\033[0m")
+    sys.exit(1)
+
+device_count = torch.cuda.device_count()
+print(f"Device Count: {device_count}")
+gpu_name = torch.cuda.get_device_name(0)
+vram_gb = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+print(f"Device 0: {gpu_name} ({vram_gb:.2f} GB VRAM)")
+
+# Run a quick CUDA tensor allocation & matmul test
+x = torch.randn(1000, 1000, device="cuda", dtype=torch.bfloat16)
+y = torch.randn(1000, 1000, device="cuda", dtype=torch.bfloat16)
+z = torch.matmul(x, y)
+torch.cuda.synchronize()
+print("\033[0;32m[SUCCESS] bfloat16 CUDA Matrix Multiplication Succeeded.\033[0m")
+
+# Verify NCCL availability
+if torch.distributed.is_nccl_available():
+    print(f"\033[0;32m[SUCCESS] NCCL Distributed Backend Available (Version: {torch.cuda.nccl.version()})\033[0m")
+else:
+    print("\033[0;33m[WARN] NCCL backend is not available in PyTorch build.\033[0m")
+EOF
+
+
+# 4. DeepSpeed Build & Compilation Flags Setup
+log_info "Setting up DeepSpeed high-performance environment variables..."
+
+# DeepSpeed Build Optimization Flags for Ampere Architecture (RTX 3080 = Compute Capability 8.6)
+export TORCH_CUDA_ARCH_LIST="8.6"
+export DS_BUILD_CPU_ADAM=1
+export DS_BUILD_FUSED_ADAM=1
+export DS_BUILD_UTILS=1
+export CCACHE_DISABLE=1
+
+log_info "Configured DS_BUILD_CPU_ADAM=1, DS_BUILD_FUSED_ADAM=1, TORCH_CUDA_ARCH_LIST=8.6"
+
+python - << 'EOF'
+try:
+    import deepspeed
+    print(f"\033[0;32m[SUCCESS] DeepSpeed Imported Successfully (Version: {deepspeed.__version__})\033[0m")
+except ImportError:
+    print("\033[0;33m[WARN] DeepSpeed not installed. Run 'pip install deepspeed'\033[0m")
+EOF
+
+
+# 5. FlashAttention Verification
+log_info "Checking FlashAttention extension availability..."
+
+python - << 'EOF'
+try:
+    import flash_attn
+    print(f"\033[0;32m[SUCCESS] FlashAttention Imported Successfully (Version: {flash_attn.__version__})\033[0m")
+except ImportError:
+    print("\033[0;33m[WARN] FlashAttention is not compiled/installed. Falling back to PyTorch SDPA (Scaled Dot-Product Attention).\033[0m")
+EOF
+
+# 6. VortexGrid Package Installation Verification
+log_info "Verifying VortexGrid editable package install..."
+
+python - << 'EOF'
+import sys
+try:
+    import vortexgrid
+    print(f"\033[0;32m[SUCCESS] vortexgrid package resolved (Version: {vortexgrid.__version__})\033[0m")
+except ImportError:
+    print("\033[0;31m[ERROR] vortexgrid package not found. Did you run 'pip install -e .'?\033[0m")
+    sys.exit(1)
+EOF
+
+
+# 7. Persist DeepSpeed Env Vars to Local Environment File
+ENV_FILE="${PWD}/.env.vortexgrid"
+log_info "Exporting runtime environment variables to ${ENV_FILE}..."
+
+cat << EOF > "${ENV_FILE}"
+# Generated by scripts/setup_env.sh for VortexGrid-Engine
+export CUDA_HOME="${CUDA_HOME}"
+export TORCH_CUDA_ARCH_LIST="8.6"
+export DS_BUILD_CPU_ADAM=1
+export DS_BUILD_FUSED_ADAM=1
+export DS_BUILD_UTILS=1
+export VORTEXGRID_LOG_LEVEL="INFO"
+export OMP_NUM_THREADS=8
+EOF
+
+log_success "Environment configuration successfully generated at ${ENV_FILE}."
+log_success "Run 'source .env.vortexgrid' to load variables into your current shell session."
+
+echo -e "${GREEN}"
+echo "        VortexGrid-Engine Environment Setup Completed Successfully!"
+echo -e "${NC}"

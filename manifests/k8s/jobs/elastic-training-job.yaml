@@ -1,0 +1,34 @@
+apiVersion: kubeflow.org/v1
+kind: PyTorchJob
+metadata:
+  name: vortexgrid-elastic-job
+  namespace: default
+  labels:
+    app.kubernetes.io/name: vortexgrid
+    vortexgrid/elastic: "true"
+spec:
+  minReplicas: 2
+  maxReplicas: 8
+  replicas: 4
+  gpusPerReplica: 1
+  pytorchReplicaSpecs:
+    Worker:
+      replicas: 4
+      restartPolicy: OnFailure
+      template:
+        spec:
+          containers:
+            - name: pytorch
+              image: vortexgrid/cuda-engine:latest
+              command:
+                - python3
+                - -m
+                - vortexgrid.scripts.run_distributed_train
+              resources:
+                limits:
+                  nvidia.com/gpu: "1"
+                  cpu: "8"
+                  memory: "32Gi"
+                requests:
+                  cpu: "4"
+                  memory: "16Gi"

@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  vortexgrid-engine:
+    image: python:3.11-slim
+    container_name: vortexgrid_engine
+    working_dir: /workspace/vortexgrid
+    environment:
+      - PYTHONPATH=/workspace/vortexgrid/src:/home/bahaa/torch_project/torch_env/lib64/python3.12/site-packages
+      - MASTER_ADDR=127.0.0.1
+      - MASTER_PORT=29500
+    volumes:
+      - ../:/workspace/vortexgrid
+      - /home/bahaa/torch_project/torch_env:/opt/torch_env 
+    command: /opt/torch_env/bin/pytest tests/unit/

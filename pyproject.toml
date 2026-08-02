@@ -1,0 +1,114 @@
+[build-system]
+requires = ["setuptools>=68.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vortexgrid"
+version = "0.1.0"
+description = "Production-Grade Distributed LLM Training Framework with FSDP, DeepSpeed ZeRO-3, and Elastic K8s/Ray Orchestration"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Bahaa", email = "bahaa@vortexgrid.ai" }
+]
+keywords = [
+    "distributed-training",
+    "pytorch",
+    "fsdp",
+    "deepspeed",
+    "zero3",
+    "ray",
+    "kubernetes",
+    "llm",
+    "cuda",
+    "optuna"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: C++",
+    "Programming Language :: CUDA",
+]
+
+dependencies = [
+    "torch>=2.3.0",
+    "torchvision",
+    "torchaudio",
+    "deepspeed>=0.14.0",
+    "ray[default]>=2.9.0",
+    "transformers>=4.40.0",
+    "datasets>=2.18.0",
+    "accelerate>=0.28.0",
+    "triton>=2.3.0",
+    "optuna>=3.6.0",
+    "wandb>=0.16.0",
+    "tensorboard>=2.16.0",
+    "prometheus-client>=0.20.0",
+    "pydantic>=2.7.0",
+    "pyyaml>=6.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-xdist>=3.5.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.4.0",
+    "mypy>=1.9.0",
+    "types-PyYAML",
+    "types-requests",
+]
+
+[project.scripts]
+vortexgrid-train = "vortexgrid.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# --- RUFF LINTER & FORMATTER CONFIGURATION ---
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = []           
+ignore = ["ALL"]       
+fixable = [] 
+
+[tool.ruff.lint.isort]
+known-first-party = ["vortexgrid"]
+
+# --- PYTEST CONFIGURATION ---
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-v --tb=short --strict-markers"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "unit: Quick unit tests",
+    "integration: Multi-process or network-dependent tests",
+    "distributed: Tests requiring torchrun multi-GPU rank spawning",
+    "cuda: Tests requiring CUDA runtime execution",
+]
+
+# --- MYPY TYPE CHECKING CONFIGURATION ---
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+namespace_packages = true
+explicit_package_bases = true
+mypy_path = "src"

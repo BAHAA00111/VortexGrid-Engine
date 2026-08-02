@@ -1,0 +1,81 @@
+# Secret & Environment Files
+.env
+.env.*
+.env.vortexgrid
+*.env
+
+
+# SQLite / HPO Databases
+*.db
+*.sqlite
+*.sqlite3
+vortexgrid_optuna.db
+
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+
+# Testing & Coverage Outputs
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+nosetests.xml
+junit-*.xml
+
+
+# Checkpoints & Model Weights
+checkpoints/
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.onnx
+*.h5
+
+# Experiment Trackers & Telemetry Logs
+wandb/
+runs/
+tensorboard/
+*.log
+
+# Virtual Environments & Build Artifacts
+venv/
+.venv/
+torch_env/
+cuda_env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+
+# IDE & System Bloat
+.DS_Store
+.idea/
+*.swp
+*.swo
+
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store

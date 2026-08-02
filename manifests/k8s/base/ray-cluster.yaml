@@ -1,0 +1,61 @@
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  name: vortexgrid-ray-cluster
+  namespace: default
+  labels:
+    app.kubernetes.io/name: ray-cluster
+    app.kubernetes.io/part-of: vortexgrid
+spec:
+  rayVersion: "2.35.0"
+  headGroupSpec:
+    rayStartParams:
+      dashboard-host: "0.0.0.0"
+      num-gpus: "0"
+      block: "true"
+    template:
+      metadata:
+        labels:
+          ray.io/node-type: head
+      spec:
+        containers:
+          - name: ray-head
+            image: rayproject/ray:2.35.0-py310
+            ports:
+              - containerPort: 6379
+                name: gcs
+              - containerPort: 8265
+                name: dashboard
+              - containerPort: 10001
+                name: client
+            resources:
+              limits:
+                cpu: "8"
+                memory: "16Gi"
+              requests:
+                cpu: "4"
+                memory: "8Gi"
+  workerGroupSpecs:
+    - groupName: gpu-workers
+      replicas: 2
+      minReplicas: 1
+      maxReplicas: 8
+      rayStartParams:
+        block: "true"
+      template:
+        metadata:
+          labels:
+            ray.io/node-type: worker
+        spec:
+          containers:
+            - name: ray-worker
+              image: rayproject/ray:2.35.0-py310-gpu
+              resources:
+                limits:
+                  cpu: "16"
+                  memory: "64Gi"
+                  nvidia.com/gpu: "1"
+                requests:
+                  cpu: "8"
+                  memory: "32Gi"
+                  nvidia.com/gpu: "1"

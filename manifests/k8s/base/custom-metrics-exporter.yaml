@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: custom-metrics-exporter
+  namespace: default
+  labels:
+    app.kubernetes.io/name: custom-metrics-exporter
+    app.kubernetes.io/component: telemetry
+    app.kubernetes.io/part-of: vortexgrid
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: custom-metrics-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: custom-metrics-exporter
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: exporter
+          image: vortexgrid/custom-metrics-exporter:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          env:
+            - name: METRICS_PORT
+              value: "9090"
+            - name: LOG_LEVEL
+              value: "INFO"
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 9090
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 9090
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 10001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: custom-metrics-exporter
+  namespace: default
+  labels:
+    app.kubernetes.io/name: custom-metrics-exporter
+    app.kubernetes.io/component: telemetry
+    app.kubernetes.io/part-of: vortexgrid
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: custom-metrics-exporter

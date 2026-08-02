@@ -1,0 +1,27 @@
+model_config:
+  model_type: "mistral"
+  architectures:
+    - "MistralForCausalLM"
+  
+  # Architectural Dimensions
+  vocab_size: 32000
+  hidden_size: 4096
+  num_hidden_layers: 32
+  num_attention_heads: 32
+  num_key_value_heads: 8    # Grouped-Query Attention (GQA) with 4:1 head ratio
+  intermediate_size: 14336  # SwiGLU hidden dimension for Mistral
+  
+  # Normalization & Activations
+  rms_norm_eps: 1.0e-5
+  hidden_act: "silu"
+  
+  # Positional Embeddings & Sliding Window Attention
+  rope_theta: 10000.0
+  max_position_embeddings: 32768
+  sliding_window: 4096      # SWA window size
+  
+  # Optimization & Kernel Settings
+  use_flash_attention_2: true
+  use_fused_rmsnorm: true
+  tie_word_embeddings: false
+  initializer_range: 0.02
