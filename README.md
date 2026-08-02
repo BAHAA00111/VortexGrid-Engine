@@ -318,8 +318,7 @@ VortexGrid-Engine/
 │       │   ├── ray_launcher.py          # Ray job submitter & auto-scaler
 │       │   └── k8s_elastic.py           # Kubernetes distributed job launcher
 │       └── models/                      # Architecture Blocks
-│           ├── transformer_blocks.py    # LLaMA/Mistral layers with    
-                                                #gradient recomputation
+│           ├── transformer_blocks.py    # LLaMA/Mistral layers with gradient recomputation
 │           └── loss_functions.py        # Fused memory cross-entropy loss
 ├── scripts/
 │   ├── setup_env.sh                    # Local environment bootstrap script
