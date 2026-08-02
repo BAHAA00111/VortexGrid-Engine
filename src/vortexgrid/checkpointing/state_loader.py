@@ -38,7 +38,9 @@ class StateLoader:
     def __init__(self, process_group: Optional[dist.ProcessGroup] = None) -> None:
         self.process_group = process_group
 
-    def inspect_checkpoint(self, checkpoint_dir: Union[str, Path]) -> CheckpointMetadata:
+    def inspect_checkpoint(
+        self, checkpoint_dir: Union[str, Path]
+    ) -> CheckpointMetadata:
         """Inspects checkpoint metadata without loading heavy tensor parameters."""
         ckpt_path = Path(checkpoint_dir)
         meta_file = ckpt_path / "metadata.json"
@@ -62,12 +64,14 @@ class StateLoader:
     ) -> Dict[str, Any]:
         """
         Loads and re-shards model and optimizer state_dicts from disk.
-        
+
         Supports elastic world-size restarts (e.g., trained on N GPUs, restored on M GPUs).
         """
         ckpt_path = Path(checkpoint_dir)
         if not ckpt_path.exists():
-            raise FileNotFoundError(f"Checkpoint directory '{ckpt_path}' does not exist.")
+            raise FileNotFoundError(
+                f"Checkpoint directory '{ckpt_path}' does not exist."
+            )
 
         metadata = self.inspect_checkpoint(ckpt_path)
         current_world_size = (
@@ -116,7 +120,11 @@ class StateLoader:
         )
 
         # 4. Apply optimizer states if provided
-        if optimizer is not None and "optimizer" in state_dict and state_dict["optimizer"]:
+        if (
+            optimizer is not None
+            and "optimizer" in state_dict
+            and state_dict["optimizer"]
+        ):
             set_optimizer_state_dict(
                 model=model,
                 optimizers=optimizer,

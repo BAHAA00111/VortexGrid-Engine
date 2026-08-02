@@ -14,12 +14,16 @@ def test_grafana_gpu_telemetry_json_parsing() -> None:
     ]
 
     dashboard_file = next((p for p in candidates if p.exists()), None)
-    assert dashboard_file is not None, "Missing Grafana telemetry JSON configuration file."
+    assert (
+        dashboard_file is not None
+    ), "Missing Grafana telemetry JSON configuration file."
 
     with open(dashboard_file, "r", encoding="utf-8") as f:
         raw_data = json.load(f)
 
-    assert isinstance(raw_data, dict), "Grafana dashboard must parse into a JSON dictionary"
+    assert isinstance(
+        raw_data, dict
+    ), "Grafana dashboard must parse into a JSON dictionary"
     dashboard: Dict[str, Any] = raw_data
 
     assert dashboard.get("uid") == "vortexgrid-gpu-telemetry"

@@ -22,18 +22,25 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def get_cosine_schedule_with_warmup(optimizer, num_warmup_steps: int, num_training_steps: int):
+def get_cosine_schedule_with_warmup(
+    optimizer, num_warmup_steps: int, num_training_steps: int
+):
     """Linear warmup followed by Cosine Annealing learning rate schedule."""
+
     def lr_lambda(current_step: int):
         if current_step < num_warmup_steps:
             return float(current_step) / float(max(1, num_warmup_steps))
-        progress = float(current_step - num_warmup_steps) / float(max(1, num_training_steps - num_warmup_steps))
+        progress = float(current_step - num_warmup_steps) / float(
+            max(1, num_training_steps - num_warmup_steps)
+        )
         return max(0.0, 0.5 * (1.0 + math.cos(math.pi * progress)))
 
     return LambdaLR(optimizer, lr_lambda)
 
 
-def objective(trial: optuna.Trial, search_space: Dict[str, Any], max_eval_steps: int = 100) -> float:
+def objective(
+    trial: optuna.Trial, search_space: Dict[str, Any], max_eval_steps: int = 100
+) -> float:
     """Optuna objective evaluation trial function with full LR scheduler and loss tracking."""
     # 1. Sample Hyperparameters
     lr = trial.suggest_float(
@@ -69,7 +76,7 @@ def objective(trial: optuna.Trial, search_space: Dict[str, Any], max_eval_steps:
     # 2. Build Model & Setup Device
     cfg = ModelConfig(
         vocab_size=32000,
-        dim=512,            # Reduced model size for ultra-fast HPO evaluation
+        dim=512,  # Reduced model size for ultra-fast HPO evaluation
         n_layers=4,
         n_heads=8,
         n_kv_heads=8,
@@ -79,11 +86,11 @@ def objective(trial: optuna.Trial, search_space: Dict[str, Any], max_eval_steps:
 
     model = TransformerBlock(cfg).to(device)
     optimizer = torch.optim.AdamW(
-        model.parameters(), 
-        lr=lr, 
-        betas=(0.9, beta2), 
-        eps=adam_eps, 
-        weight_decay=weight_decay
+        model.parameters(),
+        lr=lr,
+        betas=(0.9, beta2),
+        eps=adam_eps,
+        weight_decay=weight_decay,
     )
     scheduler = get_cosine_schedule_with_warmup(optimizer, warmup_steps, max_eval_steps)
 
@@ -100,11 +107,13 @@ def objective(trial: optuna.Trial, search_space: Dict[str, Any], max_eval_steps:
 
         out = model(inputs, cos, sin)
         loss = torch.nn.functional.mse_loss(out, targets)
-        
+
         # Check for numeric divergence (NaN / Inf)
         loss_val = float(loss.item())
         if math.isnan(loss_val) or math.isinf(loss_val):
-            logger.warning(f"Trial {trial.number} diverged at step {step} with loss={loss_val}")
+            logger.warning(
+                f"Trial {trial.number} diverged at step {step} with loss={loss_val}"
+            )
             raise optuna.TrialPruned()
 
         loss.backward()
@@ -148,8 +157,13 @@ def run_hpo(config_path: str) -> None:
     execution_cfg: Dict[str, Any] = raw_config.get("sweep_execution", {})
     n_trials = int(execution_cfg.get("n_trials", 50))
 
-    logger.info(f"Starting Optuna HPO sweep: {study.study_name} with {n_trials} trials...")
-    study.optimize(lambda trial: objective(trial, search_space, max_eval_steps=100), n_trials=n_trials)
+    logger.info(
+        f"Starting Optuna HPO sweep: {study.study_name} with {n_trials} trials..."
+    )
+    study.optimize(
+        lambda trial: objective(trial, search_space, max_eval_steps=100),
+        n_trials=n_trials,
+    )
 
     logger.info("--- HPO Sweep Finished ---")
     logger.info(f"Best Trial Parameters: {study.best_params}")

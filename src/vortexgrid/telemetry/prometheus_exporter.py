@@ -10,7 +10,13 @@ from __future__ import annotations
 import time
 from typing import Optional, Union
 
-from prometheus_client import CollectorRegistry, Counter, Gauge, REGISTRY, start_http_server
+from prometheus_client import (
+    CollectorRegistry,
+    Counter,
+    Gauge,
+    REGISTRY,
+    start_http_server,
+)
 
 from vortexgrid import logger
 from vortexgrid.telemetry.metrics_collector import StepTelemetryPayload
@@ -132,7 +138,9 @@ class PrometheusExporter:
         )
 
         # Communications & step metadata
-        self.gauges["nccl_barrier_ms"].labels(rank=rank_str).set(payload.nccl_barrier_ms)
+        self.gauges["nccl_barrier_ms"].labels(rank=rank_str).set(
+            payload.nccl_barrier_ms
+        )
         self.gauges["current_step"].labels(rank=rank_str).set(payload.step)
 
         self.step_counter.labels(rank=rank_str).inc()

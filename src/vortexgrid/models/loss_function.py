@@ -92,7 +92,9 @@ class VocabParallelCrossEntropyLoss(nn.Module):
     ) -> torch.Tensor:
         """Computes vocabulary parallel cross entropy."""
         if vocab_parallel_logits.ndim == 3:
-            vocab_parallel_logits = vocab_parallel_logits.view(-1, vocab_parallel_logits.size(-1))
+            vocab_parallel_logits = vocab_parallel_logits.view(
+                -1, vocab_parallel_logits.size(-1)
+            )
         if targets.ndim == 2:
             targets = targets.view(-1)
 

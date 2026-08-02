@@ -75,7 +75,9 @@ class OptunaRunner:
 
             try:
                 score = objective_fn(trial, config)
-                logger.info(f"Completed HPO Trial #{trial.number} with final metric: {score:.6f}")
+                logger.info(
+                    f"Completed HPO Trial #{trial.number} with final metric: {score:.6f}"
+                )
                 return score
             except optuna.TrialPruned as e:
                 logger.info(f"Trial #{trial.number} was pruned by Optuna.")

@@ -3,6 +3,7 @@ Search Space Definitions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Defines hyperparameter search spaces and dynamic trial sampling rules.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

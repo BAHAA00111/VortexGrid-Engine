@@ -70,11 +70,13 @@ class DistributedContext:
 
     def initialize(self) -> DistributedContext:
         """
-        Discovers environment variables (Torchrun / Slurm / Ray), initializes the PyTorch 
+        Discovers environment variables (Torchrun / Slurm / Ray), initializes the PyTorch
         distributed process group, binds the active CUDA device, and runs a diagnostic barrier.
         """
         if DistributedContext._initialized:
-            logger.warning("DistributedContext is already initialized. Skipping re-initialization.")
+            logger.warning(
+                "DistributedContext is already initialized. Skipping re-initialization."
+            )
             return self
 
         # ----------------------------------------------------------------------
@@ -107,16 +109,18 @@ class DistributedContext:
                 raise RuntimeError(
                     f"LOCAL_RANK ({self.local_rank}) exceeds available CUDA GPUs ({available_gpus})."
                 )
-            
+
             # Explicitly lock this process to its isolated local CUDA index
             torch.cuda.set_device(self.local_rank)
             self.device = torch.device(f"cuda:{self.local_rank}")
-            
+
             # Flush existing allocator caching
             torch.cuda.empty_cache()
         else:
             self.device = torch.device("cpu")
-            logger.warning("CUDA runtime is unavailable. DistributedContext falling back to CPU.")
+            logger.warning(
+                "CUDA runtime is unavailable. DistributedContext falling back to CPU."
+            )
 
         # ----------------------------------------------------------------------
         # 3. PyTorch Process Group Construction
@@ -127,7 +131,7 @@ class DistributedContext:
                     f"Initializing Process Group [Rank {self.rank}/{self.world_size - 1}] "
                     f"[Local Rank {self.local_rank}] on {socket.gethostname()} -> {self.device}"
                 )
-                
+
                 # Optimizations for NCCL networking
                 if self.config.backend == "nccl":
                     os.environ["NCCL_BUFFSIZE"] = str(self.config.nccl_buffsize)

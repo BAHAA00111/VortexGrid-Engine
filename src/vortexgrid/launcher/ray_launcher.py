@@ -22,6 +22,7 @@ try:
     import ray
     from ray.job_submission import JobStatus, JobSubmissionClient
     from ray.util.placement_group import PlacementGroup, placement_group
+
     HAS_RAY = True
 except ImportError:
     HAS_RAY = False
@@ -55,13 +56,25 @@ class RayClusterSpec:
 
         config: Dict[str, Any] = raw_config if isinstance(raw_config, dict) else {}
 
-        cluster_cfg: Dict[str, Any] = config.get("cluster", {}) if isinstance(config.get("cluster"), dict) else {}
-        worker_cfg: Dict[str, Any] = config.get("worker_group", {}) if isinstance(config.get("worker_group"), dict) else {}
-        runtime_cfg: Dict[str, Any] = config.get("runtime_env", {}) if isinstance(config.get("runtime_env"), dict) else {}
+        cluster_cfg: Dict[str, Any] = (
+            config.get("cluster", {}) if isinstance(config.get("cluster"), dict) else {}
+        )
+        worker_cfg: Dict[str, Any] = (
+            config.get("worker_group", {})
+            if isinstance(config.get("worker_group"), dict)
+            else {}
+        )
+        runtime_cfg: Dict[str, Any] = (
+            config.get("runtime_env", {})
+            if isinstance(config.get("runtime_env"), dict)
+            else {}
+        )
 
         return cls(
             cluster_address=str(cluster_cfg.get("address", "auto")),
-            dashboard_url=str(cluster_cfg.get("dashboard_url", "http://127.0.0.1:8265")),
+            dashboard_url=str(
+                cluster_cfg.get("dashboard_url", "http://127.0.0.1:8265")
+            ),
             num_workers=int(worker_cfg.get("num_workers", 4)),
             gpus_per_worker=int(worker_cfg.get("gpus_per_worker", 1)),
             cpus_per_worker=int(worker_cfg.get("cpus_per_worker", 8)),
@@ -97,7 +110,9 @@ class RayLauncher:
     def initialize_cluster_connection(self) -> None:
         """Establishes connection to the running Ray cluster head node."""
         if not ray.is_initialized():
-            logger.info(f"Connecting to Ray cluster at '{self.spec.cluster_address}'...")
+            logger.info(
+                f"Connecting to Ray cluster at '{self.spec.cluster_address}'..."
+            )
             ray.init(
                 address=self.spec.cluster_address,
                 ignore_reinit_error=True,
@@ -162,7 +177,9 @@ class RayLauncher:
             metadata=metadata or {"framework": "VortexGrid"},
         )
 
-        logger.info(f"Ray Job successfully submitted with Submission ID: '{submitted_id}'")
+        logger.info(
+            f"Ray Job successfully submitted with Submission ID: '{submitted_id}'"
+        )
         return submitted_id
 
     def wait_for_job_completion(
@@ -187,7 +204,9 @@ class RayLauncher:
                 return status
 
             if timeout_seconds and (time.time() - start_time) > timeout_seconds:
-                raise TimeoutError(f"Job '{job_id}' exceeded timeout of {timeout_seconds}s")
+                raise TimeoutError(
+                    f"Job '{job_id}' exceeded timeout of {timeout_seconds}s"
+                )
 
             time.sleep(poll_interval_seconds)
 

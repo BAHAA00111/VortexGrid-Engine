@@ -4,6 +4,7 @@ CUDA Memory Profiler & Snapshot Generator
 Provides real-time visibility into GPU VRAM allocations, peak usage, memory reservation,
 and fragmentation ratios. Captures PyTorch CUDA memory snapshots for visual debugging.
 """
+
 from __future__ import annotations
 
 import gc
@@ -22,7 +23,7 @@ from vortexgrid import logger
 @dataclass
 class MemoryStats:
     """Container for active GPU VRAM state metrics in Megabytes (MB)."""
-    
+
     allocated_mb: float
     reserved_mb: float
     max_allocated_mb: float
@@ -41,6 +42,7 @@ class MemoryProfiler:
     Monitors CUDA VRAM consumption, tracks peak allocation history,
     computes fragmentation ratios, and exports memory history snapshots.
     """
+
     def __init__(
         self,
         device: Optional[Union[torch.device, int]] = None,
@@ -97,7 +99,9 @@ class MemoryProfiler:
         bytes_per_mb = 1024 * 1024
         allocated = torch.cuda.memory_allocated(self.device_index) / bytes_per_mb
         reserved = torch.cuda.memory_reserved(self.device_index) / bytes_per_mb
-        max_allocated = torch.cuda.max_memory_allocated(self.device_index) / bytes_per_mb
+        max_allocated = (
+            torch.cuda.max_memory_allocated(self.device_index) / bytes_per_mb
+        )
         max_reserved = torch.cuda.max_memory_reserved(self.device_index) / bytes_per_mb
 
         total_bytes, free_bytes = torch.cuda.mem_get_info(self.device_index)

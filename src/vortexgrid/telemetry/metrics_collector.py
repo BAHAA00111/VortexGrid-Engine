@@ -17,7 +17,10 @@ import torch
 import torch.distributed as dist
 
 from vortexgrid import logger
-from vortexgrid.telemetry.hardware_profiler import HardwarePerformanceStats, HardwareProfiler
+from vortexgrid.telemetry.hardware_profiler import (
+    HardwarePerformanceStats,
+    HardwareProfiler,
+)
 from vortexgrid.telemetry.memory_profiler import MemoryProfiler, MemoryStats
 
 

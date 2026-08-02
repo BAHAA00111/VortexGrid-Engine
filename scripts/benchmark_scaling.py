@@ -1,7 +1,7 @@
 """
 Distributed Scaling & Throughput Benchmark
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Measures model training throughput (tokens/sec), VRAM peak usage, 
+Measures model training throughput (tokens/sec), VRAM peak usage,
 and Model FLOPs Utilization (MFU) across cluster scale.
 """
 
@@ -17,13 +17,19 @@ import torch.distributed as dist
 
 from vortexgrid.models import FusedCrossEntropyLoss, ModelConfig, TransformerBlock
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
-def compute_flops_per_token(n_layers: int, dim: int, seq_len: int, vocab_size: int) -> float:
+def compute_flops_per_token(
+    n_layers: int, dim: int, seq_len: int, vocab_size: int
+) -> float:
     """Estimates forward + backward FLOPs per token for standard Transformer architecture."""
-    flop_per_token = 6 * (n_layers * (12 * (dim**2) + 12 * dim * seq_len)) + 2 * vocab_size * dim
+    flop_per_token = (
+        6 * (n_layers * (12 * (dim**2) + 12 * dim * seq_len)) + 2 * vocab_size * dim
+    )
     return float(flop_per_token)
 
 
@@ -59,7 +65,9 @@ def run_scaling_benchmark(
     sin = torch.zeros((seq_len, head_dim), device=device)
 
     # Inputs for TransformerBlock: (batch_size, seq_len, dim)
-    inputs = torch.randn(batch_size, seq_len, cfg.dim, device=device, requires_grad=True)
+    inputs = torch.randn(
+        batch_size, seq_len, cfg.dim, device=device, requires_grad=True
+    )
     targets = torch.randn(batch_size, seq_len, cfg.dim, device=device)
 
     # Warmup iterations
@@ -93,7 +101,11 @@ def run_scaling_benchmark(
         "world_size": world_size,
         "tokens_per_sec": tokens_per_sec,
         "elapsed_seconds": elapsed,
-        "peak_vram_gb": (torch.cuda.max_memory_allocated() / (1024**3)) if torch.cuda.is_available() else 0.0,
+        "peak_vram_gb": (
+            (torch.cuda.max_memory_allocated() / (1024**3))
+            if torch.cuda.is_available()
+            else 0.0
+        ),
     }
 
     if rank == 0:
@@ -111,4 +123,6 @@ if __name__ == "__main__":
     parser.add_argument("--seq-len", type=int, default=2048)
     args = parser.parse_args()
 
-    run_scaling_benchmark(num_steps=args.steps, batch_size=args.batch_size, seq_len=args.seq_len)
+    run_scaling_benchmark(
+        num_steps=args.steps, batch_size=args.batch_size, seq_len=args.seq_len
+    )

@@ -7,8 +7,7 @@ from vortexgrid.launcher.ray_launcher import RayClusterSpec, RayLauncher, HAS_RA
 @pytest.mark.unit
 def test_ray_cluster_spec_manifest_loading(tmp_path: Path):
     manifest_file = tmp_path / "ray_config.yaml"
-    manifest_file.write_text(
-        """
+    manifest_file.write_text("""
 cluster:
   address: "127.0.0.1:6379"
   dashboard_url: "http://127.0.0.1:8265"
@@ -17,8 +16,7 @@ worker_group:
   gpus_per_worker: 1
   cpus_per_worker: 4
   placement_strategy: "STRICT_SPREAD"
-"""
-    )
+""")
 
     spec = RayClusterSpec.from_manifest(manifest_file)
     assert spec.cluster_address == "127.0.0.1:6379"

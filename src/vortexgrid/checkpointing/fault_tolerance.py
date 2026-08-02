@@ -62,7 +62,9 @@ class HeartbeatMonitor:
                 self.last_heartbeat = current_time
                 return True
             except Exception as e:
-                logger.error(f"Heartbeat failure detected on rank {dist.get_rank()}: {str(e)}")
+                logger.error(
+                    f"Heartbeat failure detected on rank {dist.get_rank()}: {str(e)}"
+                )
                 return False
         return True
 
@@ -84,9 +86,13 @@ class ElasticFaultHandler:
         self.model = model
         self.optimizer = optimizer
         self.config = config or FaultToleranceConfig()
-        self.saver = saver or AsyncShardedSaver(base_dir=self.config.recovery_checkpoint_dir)
+        self.saver = saver or AsyncShardedSaver(
+            base_dir=self.config.recovery_checkpoint_dir
+        )
         self.loader = loader or StateLoader()
-        self.heartbeat = HeartbeatMonitor(interval_seconds=self.config.heartbeat_interval_seconds)
+        self.heartbeat = HeartbeatMonitor(
+            interval_seconds=self.config.heartbeat_interval_seconds
+        )
         self.retry_count = 0
 
     def handle_cuda_oom(self) -> None:
@@ -111,7 +117,9 @@ class ElasticFaultHandler:
             logger.info("Successfully reconstructed distributed process group.")
             return True
         except Exception as e:
-            logger.critical(f"Failed to reconstruct distributed process group: {str(e)}")
+            logger.critical(
+                f"Failed to reconstruct distributed process group: {str(e)}"
+            )
             return False
 
     def recover_from_latest_checkpoint(
@@ -123,7 +131,9 @@ class ElasticFaultHandler:
         path = os.path.abspath(target_dir)
 
         if not os.path.exists(path):
-            logger.error(f"Recovery failed: Checkpoint directory '{path}' does not exist.")
+            logger.error(
+                f"Recovery failed: Checkpoint directory '{path}' does not exist."
+            )
             return {}
 
         subdirs = [
@@ -133,7 +143,9 @@ class ElasticFaultHandler:
         ]
 
         if not subdirs:
-            logger.warning(f"No valid step checkpoints found in '{path}' for auto-recovery.")
+            logger.warning(
+                f"No valid step checkpoints found in '{path}' for auto-recovery."
+            )
             return {}
 
         # Sort subdirectories by step number
@@ -155,7 +167,7 @@ class ElasticFaultHandler:
     ) -> Tuple[bool, Any]:
         """
         Executes a training step function within an elastic fault-tolerant wrapper.
-        
+
         Automatically catches Torch CUDA OOM exceptions and PyTorch Distributed RuntimeErrors.
         """
         while self.retry_count <= self.config.max_retries:
@@ -183,28 +195,42 @@ class ElasticFaultHandler:
             except (RuntimeError, dist.DistError) as dist_err:
                 err_msg = str(dist_err).lower()
                 is_dist_failure = any(
-                    k in err_msg for k in ["nccl", "gloo", "connection", "socket", "heartbeat", "work"]
+                    k in err_msg
+                    for k in [
+                        "nccl",
+                        "gloo",
+                        "connection",
+                        "socket",
+                        "heartbeat",
+                        "work",
+                    ]
                 )
 
                 if is_dist_failure:
-                    logger.error(f"Distributed network failure encountered: {str(dist_err)}")
+                    logger.error(
+                        f"Distributed network failure encountered: {str(dist_err)}"
+                    )
                     self.retry_count += 1
-                    
+
                     if self.retry_count > self.config.max_retries:
-                        logger.critical("Exceeded maximum fault recovery retries. Aborting execution.")
+                        logger.critical(
+                            "Exceeded maximum fault recovery retries. Aborting execution."
+                        )
                         raise dist_err
 
                     # Reconstruct communications & load checkpoint state
                     if self.reconstruct_process_group():
                         self.recover_from_latest_checkpoint()
-                    
+
                     time.sleep(self.config.retry_delay_seconds)
                 else:
                     # Unhandled general RuntimeError
                     raise dist_err
 
             except Exception as unhandled_e:
-                logger.critical(f"Unhandled non-recoverable error in step execution: {str(unhandled_e)}")
+                logger.critical(
+                    f"Unhandled non-recoverable error in step execution: {str(unhandled_e)}"
+                )
                 raise unhandled_e
 
         return False, None

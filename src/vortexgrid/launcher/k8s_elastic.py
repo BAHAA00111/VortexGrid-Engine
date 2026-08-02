@@ -20,6 +20,7 @@ from vortexgrid import logger
 try:
     from kubernetes import client, config
     from kubernetes.client.rest import ApiException
+
     HAS_K8S = True
 except ImportError:
     HAS_K8S = False
@@ -63,9 +64,7 @@ class K8sElasticJobSpec:
             else {}
         )
         spec: Dict[str, Any] = (
-            manifest.get("spec", {})
-            if isinstance(manifest.get("spec"), dict)
-            else {}
+            manifest.get("spec", {}) if isinstance(manifest.get("spec"), dict) else {}
         )
 
         return cls(
@@ -252,7 +251,9 @@ class K8sElasticLauncher:
         )
 
         self.spec.target_replicas = target_replicas
-        logger.info(f"Successfully scaled '{self.spec.job_name}' to {target_replicas} replicas.")
+        logger.info(
+            f"Successfully scaled '{self.spec.job_name}' to {target_replicas} replicas."
+        )
         return response if isinstance(response, dict) else {}
 
     def wait_for_job_completion(
@@ -262,7 +263,9 @@ class K8sElasticLauncher:
     ) -> str:
         """Polls Kubernetes Custom Object state until Succeeded, Failed, or Timed Out."""
         start_time = time.time()
-        logger.info(f"Monitoring lifecycle for Kubernetes Job '{self.spec.job_name}'...")
+        logger.info(
+            f"Monitoring lifecycle for Kubernetes Job '{self.spec.job_name}'..."
+        )
 
         while True:
             try:
@@ -277,10 +280,14 @@ class K8sElasticLauncher:
                 # Safely parse nested dict structure without triggering Pyright NoneType attribute errors
                 job_dict: Dict[str, Any] = job if isinstance(job, dict) else {}
                 status_raw = job_dict.get("status")
-                status_dict: Dict[str, Any] = status_raw if isinstance(status_raw, dict) else {}
+                status_dict: Dict[str, Any] = (
+                    status_raw if isinstance(status_raw, dict) else {}
+                )
 
                 conditions_raw = status_dict.get("conditions")
-                conditions: List[Any] = conditions_raw if isinstance(conditions_raw, list) else []
+                conditions: List[Any] = (
+                    conditions_raw if isinstance(conditions_raw, list) else []
+                )
 
                 for cond in conditions:
                     if isinstance(cond, dict):
@@ -288,10 +295,14 @@ class K8sElasticLauncher:
                         cond_status = str(cond.get("status", ""))
 
                         if cond_type == "Succeeded" and cond_status == "True":
-                            logger.info(f"Job '{self.spec.job_name}' completed successfully.")
+                            logger.info(
+                                f"Job '{self.spec.job_name}' completed successfully."
+                            )
                             return "Succeeded"
                         if cond_type == "Failed" and cond_status == "True":
-                            logger.error(f"Job '{self.spec.job_name}' execution failed.")
+                            logger.error(
+                                f"Job '{self.spec.job_name}' execution failed."
+                            )
                             return "Failed"
 
             except ApiException as e:
@@ -316,4 +327,6 @@ class K8sElasticLauncher:
             )
             logger.info(f"Successfully deleted Kubernetes Job '{self.spec.job_name}'.")
         except ApiException as e:
-            logger.error(f"Failed to delete Kubernetes Job '{self.spec.job_name}': {str(e)}")
+            logger.error(
+                f"Failed to delete Kubernetes Job '{self.spec.job_name}': {str(e)}"
+            )

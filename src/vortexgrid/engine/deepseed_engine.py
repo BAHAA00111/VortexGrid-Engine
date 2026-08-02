@@ -19,16 +19,21 @@ class DistributedConfig:
     backend: str = field(
         default_factory=lambda: os.getenv("VORTEXGRID_DIST_BACKEND", "nccl").lower()
     )
-    init_method: str = field(default_factory=lambda: os.getenv("MASTER_ADDR_PORT_INIT", "env://"))
+    init_method: str = field(
+        default_factory=lambda: os.getenv("MASTER_ADDR_PORT_INIT", "env://")
+    )
     timeout_seconds: int = field(
         default_factory=lambda: int(os.getenv("VORTEXGRID_DIST_TIMEOUT", "1800"))
     )
     find_unused_parameters: bool = field(
         default_factory=lambda: (
-            os.getenv("VORTEXGRID_FIND_UNUSED_PARAMS", "0").lower() in ("1", "true", "yes")
+            os.getenv("VORTEXGRID_FIND_UNUSED_PARAMS", "0").lower()
+            in ("1", "true", "yes")
         )
     )
-    nccl_buffsize: int = field(default_factory=lambda: int(os.getenv("NCCL_BUFFSIZE", "4194304")))
+    nccl_buffsize: int = field(
+        default_factory=lambda: int(os.getenv("NCCL_BUFFSIZE", "4194304"))
+    )
 
 
 class DistributedContext:
@@ -64,7 +69,9 @@ class DistributedContext:
         distributed process group, binds the active CUDA device, and runs a diagnostic barrier.
         """
         if DistributedContext._initialized:
-            logger.warning("DistributedContext is already initialized. Skipping re-initialization.")
+            logger.warning(
+                "DistributedContext is already initialized. Skipping re-initialization."
+            )
             return self
 
         # ----------------------------------------------------------------------
@@ -106,7 +113,9 @@ class DistributedContext:
             torch.cuda.empty_cache()
         else:
             self.device = torch.device("cpu")
-            logger.warning("CUDA runtime is unavailable. DistributedContext falling back to CPU.")
+            logger.warning(
+                "CUDA runtime is unavailable. DistributedContext falling back to CPU."
+            )
 
         # ----------------------------------------------------------------------
         # 3. PyTorch Process Group Construction

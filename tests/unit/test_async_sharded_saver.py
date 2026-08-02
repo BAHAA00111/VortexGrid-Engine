@@ -3,7 +3,10 @@ from pathlib import Path
 import pytest
 import torch
 import torch.nn as nn
-from vortexgrid.checkpointing.async_sharded_saver import AsyncShardedSaver, CheckpointMetadata
+from vortexgrid.checkpointing.async_sharded_saver import (
+    AsyncShardedSaver,
+    CheckpointMetadata,
+)
 
 
 class SimpleModel(nn.Module):

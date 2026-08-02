@@ -18,6 +18,7 @@ from vortexgrid.tracker.base_tracker import BaseTracker
 
 try:
     from torch.utils.tensorboard import SummaryWriter
+
     HAS_TENSORBOARD = True
 except ImportError:
     HAS_TENSORBOARD = False
@@ -98,7 +99,7 @@ class TensorBoardTracker(BaseTracker):
                 self.writer.add_scalar(
                     f"gradients/layer_norm/{name}", param_norm, global_step=step
                 )
-                total_sq_norm += param_norm ** norm_type
+                total_sq_norm += param_norm**norm_type
 
         total_grad_norm = total_sq_norm ** (1.0 / norm_type)
         self.writer.add_scalar(

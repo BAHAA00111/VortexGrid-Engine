@@ -83,10 +83,12 @@ def separate_weight_decay_params(
     inter_params = decay_params & no_decay_params
     union_params = decay_params | no_decay_params
 
-    assert len(inter_params) == 0, f"Parameters {inter_params} made it into both decay/no_decay sets!"
-    assert len(param_dict.keys() - union_params) == 0, (
-        f"Parameters {param_dict.keys() - union_params} were not assigned to either decay set!"
-    )
+    assert (
+        len(inter_params) == 0
+    ), f"Parameters {inter_params} made it into both decay/no_decay sets!"
+    assert (
+        len(param_dict.keys() - union_params) == 0
+    ), f"Parameters {param_dict.keys() - union_params} were not assigned to either decay set!"
 
     decay_list = [param_dict[pn] for pn in sorted(list(decay_params))]
     no_decay_list = [param_dict[pn] for pn in sorted(list(no_decay_params))]
@@ -191,12 +193,14 @@ def build_grad_scaler(
         config = OptimizerConfig()
 
     dtype_str = config.precision_dtype.lower()
-    
+
     if enabled is None:
         # FP16 requires dynamic gradient scaling; BF16/FP32 do not
         enabled = dtype_str in ("float16", "fp16") and torch.cuda.is_available()
 
-    logger.info(f"Initializing Mixed Precision GradScaler | Enabled: {enabled} | Precision: {dtype_str}")
+    logger.info(
+        f"Initializing Mixed Precision GradScaler | Enabled: {enabled} | Precision: {dtype_str}"
+    )
 
     scaler = torch.amp.GradScaler(
         device="cuda" if torch.cuda.is_available() else "cpu",

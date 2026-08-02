@@ -1,5 +1,8 @@
 import pytest
-from vortexgrid.telemetry.hardware_profiler import HardwarePerformanceStats, HardwareProfiler
+from vortexgrid.telemetry.hardware_profiler import (
+    HardwarePerformanceStats,
+    HardwareProfiler,
+)
 
 
 @pytest.mark.unit

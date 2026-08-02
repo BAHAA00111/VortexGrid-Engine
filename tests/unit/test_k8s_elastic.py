@@ -1,14 +1,17 @@
 from pathlib import Path
 import pytest
 
-from vortexgrid.launcher.k8s_elastic import HAS_K8S, K8sElasticJobSpec, K8sElasticLauncher
+from vortexgrid.launcher.k8s_elastic import (
+    HAS_K8S,
+    K8sElasticJobSpec,
+    K8sElasticLauncher,
+)
 
 
 @pytest.mark.unit
 def test_k8s_elastic_job_spec_manifest_loading(tmp_path: Path):
     manifest_file = tmp_path / "k8s_job.yaml"
-    manifest_file.write_text(
-        """
+    manifest_file.write_text("""
 metadata:
   name: "test-elastic-job"
   namespace: "vortexgrid-prod"
@@ -17,8 +20,7 @@ spec:
   maxReplicas: 16
   replicas: 8
   gpusPerReplica: 2
-"""
-    )
+""")
 
     spec = K8sElasticJobSpec.from_manifest(manifest_file)
     assert spec.job_name == "test-elastic-job"

@@ -21,7 +21,7 @@ def cleanup_dist_group():
 @pytest.mark.unit
 def test_tensor_parallel_primitives_fallback():
     x = torch.randn(2, 4, 16)
-    
+
     # Test autograd primitives in single-process (no dist) fallback mode
     assert torch.allclose(copy_to_tensor_parallel_region(x), x)
     assert torch.allclose(reduce_from_tensor_parallel_region(x), x)
@@ -31,7 +31,9 @@ def test_tensor_parallel_primitives_fallback():
 
 @pytest.mark.unit
 def test_column_parallel_linear_single_node():
-    col_layer = ColumnParallelLinear(in_features=16, out_features=32, bias=True, gather_output=True)
+    col_layer = ColumnParallelLinear(
+        in_features=16, out_features=32, bias=True, gather_output=True
+    )
     x = torch.randn(2, 4, 16)
     out = col_layer(x)
 
@@ -43,7 +45,9 @@ def test_column_parallel_linear_single_node():
 
 @pytest.mark.unit
 def test_row_parallel_linear_single_node():
-    row_layer = RowParallelLinear(in_features=16, out_features=8, bias=True, input_is_parallel=False)
+    row_layer = RowParallelLinear(
+        in_features=16, out_features=8, bias=True, input_is_parallel=False
+    )
     x = torch.randn(2, 4, 16)
     out = row_layer(x)
 
@@ -56,8 +60,12 @@ def test_row_parallel_linear_single_node():
 @pytest.mark.unit
 def test_column_row_pipeline():
     # Megatron MLP structure: ColumnParallel -> Act -> RowParallel
-    col_layer = ColumnParallelLinear(in_features=16, out_features=32, bias=True, gather_output=False)
-    row_layer = RowParallelLinear(in_features=32, out_features=16, bias=True, input_is_parallel=True)
+    col_layer = ColumnParallelLinear(
+        in_features=16, out_features=32, bias=True, gather_output=False
+    )
+    row_layer = RowParallelLinear(
+        in_features=32, out_features=16, bias=True, input_is_parallel=True
+    )
 
     x = torch.randn(2, 4, 16)
     h = col_layer(x)

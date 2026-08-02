@@ -1,7 +1,7 @@
 """
 VortexGrid :: Fault Recovery Integration Tests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Validates state reconstruction and mathematical determinism across 
+Validates state reconstruction and mathematical determinism across
 simulated process node failures and checkpoint recovery.
 """
 
@@ -28,7 +28,9 @@ class TrainingResult(TypedDict):
 class SimpleTransformerBlock(nn.Module):
     def __init__(self, dim: int = 128, n_heads: int = 4):
         super().__init__()
-        self.attn = nn.MultiheadAttention(embed_dim=dim, num_heads=n_heads, batch_first=True)
+        self.attn = nn.MultiheadAttention(
+            embed_dim=dim, num_heads=n_heads, batch_first=True
+        )
         self.mlp = nn.Sequential(
             nn.Linear(dim, dim * 4),
             nn.GELU(),
@@ -64,7 +66,12 @@ def cleanup_dist():
 
 
 def run_continuous_training(
-    rank: int, world_size: int, total_steps: int, data_inputs: list[torch.Tensor], temp_dir: str, port: int
+    rank: int,
+    world_size: int,
+    total_steps: int,
+    data_inputs: list[torch.Tensor],
+    temp_dir: str,
+    port: int,
 ) -> None:
     """Runs uninterrupted training for `total_steps` and dumps result to disk."""
     setup_dist(rank, world_size, port)
@@ -157,7 +164,9 @@ def run_interrupted_and_resumed_training(
         all_losses = phase1_losses + phase2_losses
         res: TrainingResult = {
             "losses": torch.tensor(all_losses),
-            "state_dict": {k: v.cpu().clone() for k, v in model_resumed.state_dict().items()},
+            "state_dict": {
+                k: v.cpu().clone() for k, v in model_resumed.state_dict().items()
+            },
         }
         torch.save(res, os.path.join(temp_dir, "resumed_res.pt"))
 
@@ -207,15 +216,16 @@ def test_checkpoint_fault_recovery_equivalence():
         )
 
         # 3. Load results & Assert Equivalence
-        continuous_res: TrainingResult = torch.load(os.path.join(temp_dir, "continuous_res.pt"))
-        resumed_res: TrainingResult = torch.load(os.path.join(temp_dir, "resumed_res.pt"))
+        continuous_res: TrainingResult = torch.load(
+            os.path.join(temp_dir, "continuous_res.pt")
+        )
+        resumed_res: TrainingResult = torch.load(
+            os.path.join(temp_dir, "resumed_res.pt")
+        )
 
         # Loss trajectory check
         torch.testing.assert_close(
-            continuous_res["losses"], 
-            resumed_res["losses"], 
-            rtol=1e-5, 
-            atol=1e-5
+            continuous_res["losses"], resumed_res["losses"], rtol=1e-5, atol=1e-5
         )
 
         # Final parameters check

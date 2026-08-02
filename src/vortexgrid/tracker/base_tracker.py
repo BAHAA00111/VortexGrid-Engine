@@ -3,6 +3,7 @@ Abstract Base Experiment Tracker
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Defines standard interface for experiment tracking backends (WandB, TensorBoard, etc.).
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

@@ -4,6 +4,7 @@ Communication Latency & TFLOPS Profiler
 Measures real-time NCCL distributed collective communication latencies and tracks
 achieved hardware TFLOPS and Model FLOPs Utilization (MFU) using high-precision CUDA events.
 """
+
 from __future__ import annotations
 
 import time
@@ -31,7 +32,7 @@ class HardwarePerformanceStats:
 class HardwareProfiler:
     """
     Measures GPU compute performance (TFLOPS / MFU) and NCCL collective latency.
-    
+
     Utilizes CUDA events for microsecond-accurate kernel timing without CPU synchronization overhead.
     """
 
@@ -43,7 +44,9 @@ class HardwareProfiler:
         self.peak_gpu_tflops = peak_gpu_tflops
 
         if device is None:
-            self.device_index = torch.cuda.current_device() if torch.cuda.is_available() else -1
+            self.device_index = (
+                torch.cuda.current_device() if torch.cuda.is_available() else -1
+            )
         elif isinstance(device, torch.device):
             self.device_index = device.index if device.index is not None else 0
         else:
@@ -77,7 +80,9 @@ class HardwareProfiler:
             return 0.0
 
         num_elements = int((tensor_size_mb * 1024 * 1024) / 4)  # float32 elements
-        dummy_tensor = torch.ones(num_elements, device=f"cuda:{self.device_index}", dtype=torch.float32)
+        dummy_tensor = torch.ones(
+            num_elements, device=f"cuda:{self.device_index}", dtype=torch.float32
+        )
 
         # Warmup iterations
         for _ in range(num_warmup):
@@ -106,7 +111,7 @@ class HardwareProfiler:
     ) -> float:
         """
         Calculates theoretical FLOPs for standard Transformer forward/backward passes.
-        
+
         Formula: 6 * N * B * S + 12 * L * H * B * S^2 (6 FLOPs per param + Self-Attention matrix ops)
         """
         # 6 FLOPs per parameter (2 for forward pass, 4 for backward pass)
@@ -114,7 +119,7 @@ class HardwareProfiler:
         param_flops = factor * num_params * batch_size * seq_len
 
         # Self-Attention QK^T and Attention-Value multiplications
-        attn_flops = 12.0 * num_layers * hidden_dim * batch_size * (seq_len ** 2)
+        attn_flops = 12.0 * num_layers * hidden_dim * batch_size * (seq_len**2)
 
         return param_flops + attn_flops
 

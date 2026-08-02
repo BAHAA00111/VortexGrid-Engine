@@ -35,7 +35,9 @@ def setup_distributed() -> tuple[int, int, int]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run Distributed LLM Training")
-    parser.add_argument("--config", type=str, required=True, help="Path to model YAML config")
+    parser.add_argument(
+        "--config", type=str, required=True, help="Path to model YAML config"
+    )
     parser.add_argument("--max-steps", type=int, default=100)
     args = parser.parse_args()
 
@@ -48,13 +50,17 @@ def main() -> None:
     assert isinstance(raw_config, dict), "Config file must be a YAML dictionary"
     model_cfg_dict: Dict[str, Any] = raw_config.get("model_config", {})
 
-    n_heads = int(model_cfg_dict.get("n_heads", model_cfg_dict.get("num_attention_heads", 32)))
+    n_heads = int(
+        model_cfg_dict.get("n_heads", model_cfg_dict.get("num_attention_heads", 32))
+    )
     n_kv_heads = int(model_cfg_dict.get("n_kv_heads", n_heads))
 
     cfg = ModelConfig(
         vocab_size=int(model_cfg_dict.get("vocab_size", 32000)),
         dim=int(model_cfg_dict.get("dim", model_cfg_dict.get("hidden_size", 4096))),
-        n_layers=int(model_cfg_dict.get("n_layers", model_cfg_dict.get("num_hidden_layers", 32))),
+        n_layers=int(
+            model_cfg_dict.get("n_layers", model_cfg_dict.get("num_hidden_layers", 32))
+        ),
         n_heads=n_heads,
         n_kv_heads=n_kv_heads,
         max_seq_len=int(model_cfg_dict.get("max_seq_len", 2048)),

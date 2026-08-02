@@ -39,7 +39,9 @@ class ModelConfig:
         if self.n_kv_heads is None:
             self.n_kv_heads = self.n_heads
         assert self.dim % self.n_heads == 0, "dim must be divisible by n_heads"
-        assert self.n_heads % self.n_kv_heads == 0, "n_heads must be divisible by n_kv_heads"
+        assert (
+            self.n_heads % self.n_kv_heads == 0
+        ), "n_heads must be divisible by n_kv_heads"
 
 
 class RMSNorm(nn.Module):
@@ -62,28 +64,36 @@ class RotaryEmbedding(nn.Module):
     cos_cached: torch.Tensor
     sin_cached: torch.Tensor
 
-    def __init__(self, dim: int, max_seq_len: int = 4096, theta: float = 10000.0) -> None:
+    def __init__(
+        self, dim: int, max_seq_len: int = 4096, theta: float = 10000.0
+    ) -> None:
         super().__init__()
         self.dim = dim
         self.max_seq_len = max_seq_len
         self.theta = theta
 
-        inv_freq = 1.0 / (self.theta ** (torch.arange(0, self.dim, 2).float() / self.dim))
+        inv_freq = 1.0 / (
+            self.theta ** (torch.arange(0, self.dim, 2).float() / self.dim)
+        )
         self.register_buffer("inv_freq", inv_freq, persistent=False)
         self._build_cache(max_seq_len)
 
     def _build_cache(self, seq_len: int) -> None:
-        t = torch.arange(seq_len, dtype=self.inv_freq.dtype, device=self.inv_freq.device)
+        t = torch.arange(
+            seq_len, dtype=self.inv_freq.dtype, device=self.inv_freq.device
+        )
         freqs = torch.outer(t, self.inv_freq)
         emb = torch.cat((freqs, freqs), dim=-1)
         self.register_buffer("cos_cached", emb.cos(), persistent=False)
         self.register_buffer("sin_cached", emb.sin(), persistent=False)
 
-    def forward(self, x: torch.Tensor, seq_len: int) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(
+        self, x: torch.Tensor, seq_len: int
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         if seq_len > self.max_seq_len:
             self._build_cache(seq_len)
             self.max_seq_len = seq_len
-        
+
         # Explicit type cast assertion for Pyright static analysis
         cos = self.cos_cached[:seq_len].to(dtype=x.dtype, device=x.device)
         sin = self.sin_cached[:seq_len].to(dtype=x.dtype, device=x.device)
@@ -230,7 +240,7 @@ class TransformerBlock(nn.Module):
 
 class FusedCrossEntropyLoss(nn.Module):
     """
-    Memory-efficient Fused Cross-Entropy Loss that flattens logits and targets 
+    Memory-efficient Fused Cross-Entropy Loss that flattens logits and targets
     without creating intermediate high-dimensional copies.
     """
 
@@ -244,4 +254,6 @@ class FusedCrossEntropyLoss(nn.Module):
         vocab_size = logits.shape[-1]
         logits_flat = logits.view(-1, vocab_size)
         targets_flat = targets.view(-1)
-        return F.cross_entropy(logits_flat, targets_flat, ignore_index=self.ignore_index)
+        return F.cross_entropy(
+            logits_flat, targets_flat, ignore_index=self.ignore_index
+        )

@@ -1,7 +1,7 @@
 """
 FSDP / ZeRO Numerical Equivalence Integration Tests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Verifies that forward/backward pass loss trajectories and parameter gradients 
+Verifies that forward/backward pass loss trajectories and parameter gradients
 match strictly between standard DDP baseline and FSDP sharded execution.
 """
 
@@ -21,6 +21,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 # Check FSDP availability
 try:
     from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
+
     HAS_FSDP = True
 except ImportError:
     HAS_FSDP = False
@@ -55,7 +56,12 @@ def init_process(rank: int, world_size: int, port: int, backend: str):
 
 
 def _worker_run_ddp(
-    rank: int, world_size: int, inputs: list[torch.Tensor], temp_dir: str, port: int, use_cuda: bool
+    rank: int,
+    world_size: int,
+    inputs: list[torch.Tensor],
+    temp_dir: str,
+    port: int,
+    use_cuda: bool,
 ) -> None:
     # Use Gloo if running multiple ranks on single-GPU setup to avoid NCCL Duplicate GPU crash
     gpu_count = torch.cuda.device_count() if use_cuda else 0
@@ -94,7 +100,12 @@ def _worker_run_ddp(
 
 
 def _worker_run_fsdp(
-    rank: int, world_size: int, inputs: list[torch.Tensor], temp_dir: str, port: int, use_cuda: bool
+    rank: int,
+    world_size: int,
+    inputs: list[torch.Tensor],
+    temp_dir: str,
+    port: int,
+    use_cuda: bool,
 ) -> None:
     gpu_count = torch.cuda.device_count() if use_cuda else 0
     multi_gpu = gpu_count >= world_size

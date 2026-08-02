@@ -18,23 +18,29 @@ import torch.distributed as dist
 
 from vortexgrid import logger
 
-
 # -----------------------------------------------------------------------------
 # Autograd Communication Primitives for Tensor Parallelism
 # -----------------------------------------------------------------------------
+
 
 class _CopyToTensorParallelRegion(torch.autograd.Function):
     """Passes tensor forward unchanged; All-Reduces gradients in backward pass."""
 
     @staticmethod
-    def forward(ctx: Any, input_: torch.Tensor, group: Optional[dist.ProcessGroup]) -> torch.Tensor:
+    def forward(
+        ctx: Any, input_: torch.Tensor, group: Optional[dist.ProcessGroup]
+    ) -> torch.Tensor:
         setattr(ctx, "group", group)
         return input_
 
     @staticmethod
     def backward(ctx: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, None]:
         group: Optional[dist.ProcessGroup] = getattr(ctx, "group", None)
-        if group is not None and dist.is_initialized() and dist.get_world_size(group) > 1:
+        if (
+            group is not None
+            and dist.is_initialized()
+            and dist.get_world_size(group) > 1
+        ):
             dist.all_reduce(grad_output, op=dist.ReduceOp.SUM, group=group)
         return grad_output, None
 
@@ -43,9 +49,15 @@ class _ReduceFromTensorParallelRegion(torch.autograd.Function):
     """All-Reduces tensor forward; passes gradients unchanged in backward pass."""
 
     @staticmethod
-    def forward(ctx: Any, input_: torch.Tensor, group: Optional[dist.ProcessGroup]) -> torch.Tensor:
+    def forward(
+        ctx: Any, input_: torch.Tensor, group: Optional[dist.ProcessGroup]
+    ) -> torch.Tensor:
         setattr(ctx, "group", group)
-        if group is not None and dist.is_initialized() and dist.get_world_size(group) > 1:
+        if (
+            group is not None
+            and dist.is_initialized()
+            and dist.get_world_size(group) > 1
+        ):
             output = input_.clone()
             dist.all_reduce(output, op=dist.ReduceOp.SUM, group=group)
             return output
@@ -60,9 +72,15 @@ class _ScatterToTensorParallelRegion(torch.autograd.Function):
     """Scatters tensor along last dimension forward; All-Gathers in backward pass."""
 
     @staticmethod
-    def forward(ctx: Any, input_: torch.Tensor, group: Optional[dist.ProcessGroup]) -> torch.Tensor:
+    def forward(
+        ctx: Any, input_: torch.Tensor, group: Optional[dist.ProcessGroup]
+    ) -> torch.Tensor:
         setattr(ctx, "group", group)
-        if group is None or not dist.is_initialized() or dist.get_world_size(group) <= 1:
+        if (
+            group is None
+            or not dist.is_initialized()
+            or dist.get_world_size(group) <= 1
+        ):
             return input_
 
         world_size = dist.get_world_size(group)
@@ -75,7 +93,11 @@ class _ScatterToTensorParallelRegion(torch.autograd.Function):
     @staticmethod
     def backward(ctx: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, None]:
         group: Optional[dist.ProcessGroup] = getattr(ctx, "group", None)
-        if group is None or not dist.is_initialized() or dist.get_world_size(group) <= 1:
+        if (
+            group is None
+            or not dist.is_initialized()
+            or dist.get_world_size(group) <= 1
+        ):
             return grad_output, None
 
         world_size = dist.get_world_size(group)
@@ -90,9 +112,15 @@ class _GatherFromTensorParallelRegion(torch.autograd.Function):
     """All-Gathers tensor along last dimension forward; Scatters in backward pass."""
 
     @staticmethod
-    def forward(ctx: Any, input_: torch.Tensor, group: Optional[dist.ProcessGroup]) -> torch.Tensor:
+    def forward(
+        ctx: Any, input_: torch.Tensor, group: Optional[dist.ProcessGroup]
+    ) -> torch.Tensor:
         setattr(ctx, "group", group)
-        if group is None or not dist.is_initialized() or dist.get_world_size(group) <= 1:
+        if (
+            group is None
+            or not dist.is_initialized()
+            or dist.get_world_size(group) <= 1
+        ):
             return input_
 
         world_size = dist.get_world_size(group)
@@ -104,7 +132,11 @@ class _GatherFromTensorParallelRegion(torch.autograd.Function):
     @staticmethod
     def backward(ctx: Any, grad_output: torch.Tensor) -> Tuple[torch.Tensor, None]:
         group: Optional[dist.ProcessGroup] = getattr(ctx, "group", None)
-        if group is None or not dist.is_initialized() or dist.get_world_size(group) <= 1:
+        if (
+            group is None
+            or not dist.is_initialized()
+            or dist.get_world_size(group) <= 1
+        ):
             return grad_output, None
 
         world_size = dist.get_world_size(group)
@@ -114,30 +146,40 @@ class _GatherFromTensorParallelRegion(torch.autograd.Function):
 
         return grad_output.narrow(last_dim, rank * dim_size, dim_size).clone(), None
 
-def copy_to_tensor_parallel_region(input_: torch.Tensor, group: Optional[dist.ProcessGroup] = None) -> torch.Tensor:
-    return _CopyToTensorParallelRegion.apply(input_, group)  
+
+def copy_to_tensor_parallel_region(
+    input_: torch.Tensor, group: Optional[dist.ProcessGroup] = None
+) -> torch.Tensor:
+    return _CopyToTensorParallelRegion.apply(input_, group)
 
 
-def reduce_from_tensor_parallel_region(input_: torch.Tensor, group: Optional[dist.ProcessGroup] = None) -> torch.Tensor:
-    return _ReduceFromTensorParallelRegion.apply(input_, group)  
+def reduce_from_tensor_parallel_region(
+    input_: torch.Tensor, group: Optional[dist.ProcessGroup] = None
+) -> torch.Tensor:
+    return _ReduceFromTensorParallelRegion.apply(input_, group)
 
 
-def scatter_to_tensor_parallel_region(input_: torch.Tensor, group: Optional[dist.ProcessGroup] = None) -> torch.Tensor:
-    return _ScatterToTensorParallelRegion.apply(input_, group)  
+def scatter_to_tensor_parallel_region(
+    input_: torch.Tensor, group: Optional[dist.ProcessGroup] = None
+) -> torch.Tensor:
+    return _ScatterToTensorParallelRegion.apply(input_, group)
 
 
-def gather_from_tensor_parallel_region(input_: torch.Tensor, group: Optional[dist.ProcessGroup] = None) -> torch.Tensor:
-    return _GatherFromTensorParallelRegion.apply(input_, group)  
+def gather_from_tensor_parallel_region(
+    input_: torch.Tensor, group: Optional[dist.ProcessGroup] = None
+) -> torch.Tensor:
+    return _GatherFromTensorParallelRegion.apply(input_, group)
 
 
 # -----------------------------------------------------------------------------
 # Megatron Column and Row Parallel Linear Modules
 # -----------------------------------------------------------------------------
 
+
 class ColumnParallelLinear(nn.Module):
     """
     Linear layer sliced along output columns (Megatron-style).
-    
+
     Splits out_features across tensor_parallel_world_size ranks.
     Input: [..., in_features]
     Output: [..., out_features / tp_world_size] (or [..., out_features] if gather_output=True)
@@ -168,7 +210,11 @@ class ColumnParallelLinear(nn.Module):
         self.output_size_per_partition = out_features // world_size
 
         self.weight = nn.Parameter(
-            torch.empty((self.output_size_per_partition, in_features), device=device, dtype=dtype)
+            torch.empty(
+                (self.output_size_per_partition, in_features),
+                device=device,
+                dtype=dtype,
+            )
         )
         if bias:
             self.bias = nn.Parameter(
@@ -195,7 +241,9 @@ class ColumnParallelLinear(nn.Module):
 
         if self.gather_output:
             # All-Gather outputs across TP ranks along the last dimension
-            output = gather_from_tensor_parallel_region(output_parallel, self.process_group)
+            output = gather_from_tensor_parallel_region(
+                output_parallel, self.process_group
+            )
         else:
             output = output_parallel
 
@@ -205,7 +253,7 @@ class ColumnParallelLinear(nn.Module):
 class RowParallelLinear(nn.Module):
     """
     Linear layer sliced along input rows (Megatron-style).
-    
+
     Splits in_features across tensor_parallel_world_size ranks.
     Input: [..., in_features / tp_world_size] (or [..., in_features] if input_is_parallel=False)
     Output: [..., out_features]
@@ -236,7 +284,11 @@ class RowParallelLinear(nn.Module):
         self.input_size_per_partition = in_features // world_size
 
         self.weight = nn.Parameter(
-            torch.empty((out_features, self.input_size_per_partition), device=device, dtype=dtype)
+            torch.empty(
+                (out_features, self.input_size_per_partition),
+                device=device,
+                dtype=dtype,
+            )
         )
         if bias:
             self.bias = nn.Parameter(
@@ -264,7 +316,9 @@ class RowParallelLinear(nn.Module):
         output_parallel = F.linear(input_parallel, self.weight, None)
 
         # All-Reduce partial outputs across TP ranks
-        output_ = reduce_from_tensor_parallel_region(output_parallel, self.process_group)
+        output_ = reduce_from_tensor_parallel_region(
+            output_parallel, self.process_group
+        )
 
         if self.bias is not None:
             output = output_ + self.bias

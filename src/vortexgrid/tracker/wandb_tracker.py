@@ -17,6 +17,7 @@ from vortexgrid.tracker.base_tracker import BaseTracker
 
 try:
     import wandb
+
     HAS_WANDB = True
 except ImportError:
     HAS_WANDB = False
@@ -63,7 +64,9 @@ class WandbTracker(BaseTracker):
                 config=config,
                 reinit=True,
             )
-            logger.info(f"Initialized WandB Tracker run: '{run_name}' in project '{project_name}'")
+            logger.info(
+                f"Initialized WandB Tracker run: '{run_name}' in project '{project_name}'"
+            )
         except Exception as e:
             logger.error(f"Failed to initialize WandB run: {str(e)}")
             self.enabled = False
@@ -113,7 +116,7 @@ class WandbTracker(BaseTracker):
             if param.grad is not None:
                 param_norm = param.grad.data.norm(norm_type).item()
                 grad_norms[f"gradients/layer_norm/{name}"] = round(param_norm, 4)
-                total_sq_norm += param_norm ** norm_type
+                total_sq_norm += param_norm**norm_type
 
         total_grad_norm = total_sq_norm ** (1.0 / norm_type)
         grad_norms["gradients/total_norm"] = round(total_grad_norm, 4)

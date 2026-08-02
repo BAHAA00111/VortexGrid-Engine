@@ -3,6 +3,7 @@ Engineers PyTorch Fully Sharded Data Parallel (FSDP) execution layers,
 providing automated transformer block wrapping, mixed-precision configuration,
 CPU parameter/optimizer offloading rules, and sharded checkpoint handling.
 """
+
 from __future__ import annotations
 
 import functools
@@ -97,7 +98,7 @@ def build_auto_wrap_policy(
     min_num_params: int = 1_000_000,
 ) -> Callable:
     """
-    Constructs a PyTorch FSDP auto-wrap policy targeting custom Transformer blocks 
+    Constructs a PyTorch FSDP auto-wrap policy targeting custom Transformer blocks
     with a fallback size-based policy.
     """
     if target_layer_cls is None:
@@ -126,7 +127,9 @@ def wrap_model_fsdp(
     if not torch.distributed.is_initialized():
         backend = "nccl" if torch.cuda.is_available() else "gloo"
         init_method = "tcp://127.0.0.1:29501"
-        logger.info(f"Process group uninitialized. Initializing fallback '{backend}' group for FSDP...")
+        logger.info(
+            f"Process group uninitialized. Initializing fallback '{backend}' group for FSDP..."
+        )
         torch.distributed.init_process_group(
             backend=backend,
             init_method=init_method,
@@ -148,7 +151,11 @@ def wrap_model_fsdp(
     if device_id is None and torch.cuda.is_available():
         device_id = torch.cuda.current_device()
 
-    device = torch.device(f"cuda:{device_id}") if device_id is not None else torch.device("cpu")
+    device = (
+        torch.device(f"cuda:{device_id}")
+        if device_id is not None
+        else torch.device("cpu")
+    )
 
     logger.info(
         f"Wrapping model in FSDP | Strategy: {fsdp_config.sharding_strategy} | "

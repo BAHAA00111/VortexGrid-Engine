@@ -1,6 +1,9 @@
 import time
 import pytest
-from vortexgrid.telemetry.metrics_collector import MetricsCollector, StepTelemetryPayload
+from vortexgrid.telemetry.metrics_collector import (
+    MetricsCollector,
+    StepTelemetryPayload,
+)
 
 
 @pytest.mark.unit

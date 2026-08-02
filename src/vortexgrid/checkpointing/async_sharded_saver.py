@@ -52,7 +52,7 @@ class CheckpointMetadata:
 class AsyncShardedSaver:
     """
     Asynchronous distributed checkpoint saver using PyTorch DCP and background thread pooling.
-    
+
     Prevents blocking GPU execution during sharded parameter & optimizer state writes.
     """
 
@@ -115,9 +115,7 @@ class AsyncShardedSaver:
             state_dict["extra_state"] = extra_state
 
         world_size = (
-            dist.get_world_size(self.process_group)
-            if dist.is_initialized()
-            else 1
+            dist.get_world_size(self.process_group) if dist.is_initialized() else 1
         )
 
         metadata = CheckpointMetadata(
@@ -178,8 +176,7 @@ class AsyncShardedSaver:
 
             # Write metadata file on Rank 0
             is_rank_zero = (
-                not dist.is_initialized()
-                or dist.get_rank(process_group) == 0
+                not dist.is_initialized() or dist.get_rank(process_group) == 0
             )
             if is_rank_zero:
                 meta_file = checkpoint_dir / "metadata.json"
@@ -187,9 +184,14 @@ class AsyncShardedSaver:
                     f.write(metadata.to_json())
 
             elapsed = time.perf_counter() - start_time
-            logger.info(f"Successfully saved DCP checkpoint to {checkpoint_dir} in {elapsed:.2f}s")
+            logger.info(
+                f"Successfully saved DCP checkpoint to {checkpoint_dir} in {elapsed:.2f}s"
+            )
         except Exception as e:
-            logger.error(f"Failed to save DCP checkpoint to {checkpoint_dir}: {str(e)}", exc_info=True)
+            logger.error(
+                f"Failed to save DCP checkpoint to {checkpoint_dir}: {str(e)}",
+                exc_info=True,
+            )
             raise e
 
     def _prune_completed_futures(self) -> None:
@@ -200,7 +202,9 @@ class AsyncShardedSaver:
         """Blocks execution until all pending background checkpoint writes complete."""
         if not self.active_futures:
             return
-        logger.info(f"Waiting for {len(self.active_futures)} active background saves to complete...")
+        logger.info(
+            f"Waiting for {len(self.active_futures)} active background saves to complete..."
+        )
         concurrent.futures.wait(self.active_futures)
         self._prune_completed_futures()
 
