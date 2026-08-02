@@ -138,36 +138,36 @@ VortexGrid-Engine separates orchestration, distributed execution, memory optimiz
                                       │
                                       ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                           Training Orchestrator                             │
+│                           Training Orchestrator                              │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │ Config Loader │ Launch Manager │ Experiment Manager │ CLI │ Logging │
 └──────────────────────────────────────────────────────────────────────────────┘
                                       │
                                       ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                     Distributed Training Runtime                            │
+│                     Distributed Training Runtime                             │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │ DDP │ FSDP │ DeepSpeed ZeRO │ Tensor Parallelism │ NCCL │ Torch Distributed │
 └──────────────────────────────────────────────────────────────────────────────┘
                                       │
                                       ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                     Memory Optimization Engine                              │
+│                     Memory Optimization Engine                               │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │ Mixed Precision │ Gradient Checkpointing │ Activation Recomputation │        │
-│ Optimizer Sharding │ Checkpoint Sharding │ CUDA Memory Profiling            │
+│ Optimizer Sharding │ Checkpoint Sharding │ CUDA Memory Profiling             │
 └──────────────────────────────────────────────────────────────────────────────┘
                                       │
                                       ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│               Experiment Tracking & Monitoring                              │
+│               Experiment Tracking & Monitoring                               │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │ TensorBoard │ Weights & Biases │ Prometheus │ GPU Telemetry │ Profiling │
 └──────────────────────────────────────────────────────────────────────────────┘
                                       │
                                       ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                     Docker & Kubernetes Deployment                          │
+│                     Docker & Kubernetes Deployment                           │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -274,7 +274,7 @@ VortexGrid-Engine/
 │   │       ├── elastic-training-job.yaml # K8s PyTorchJob / RayJob spec
 │   │       └── auto-recovery-cron.yaml
 │   └── ray/
-│       └── cluster-config.yaml      # Multi-node Ray cluster configuration
+│       └── cluster-config.yaml          # Multi-node Ray cluster configuration
 ├── docker/
 │   ├── Dockerfile.cuda                  # Slim CUDA + PyTorch runtime image
 │   └── docker-compose.telemetry.yaml    # Local Prometheus + Grafana 
@@ -299,7 +299,7 @@ VortexGrid-Engine/
 │       │   ├── distributed_context.py   # Process group rank 
 │       │   ├── fsdp_wrapper.py          # FSDP auto-wrap rules 
 │       │   ├── deepspeed_engine.py      # DeepSpeed engine builder 
-│       │   └── tensor_parallel.py      # Column & Row parallel linear layer
+│       │   └── tensor_parallel.py        # Column & Row parallel linear layer
 │       ├── checkpointing/               # State Sharding & Fault Recovery
 │       │   ├── async_sharded_saver.py   # Asynchronous multi-GPU 
 │       │   ├── state_loader.py          # Resilient optimizer 
@@ -313,10 +313,10 @@ VortexGrid-Engine/
 │       │   └── tensorboard_tracker.py   # TensorBoard logging wrapper
 │       ├── hpo/                         # Hyperparameter Search
 │       │   ├── optuna_runner.py         # Distributed Optuna study executor
-│       │   └── search_spaces.py       # Hyperparameter search distributions
+│       │   └── search_spaces.py         # Hyperparameter search distributions
 │       ├── launcher/                    # Cluster Launchers
 │       │   ├── ray_launcher.py          # Ray job submitter & auto-scaler
-│       │   └── k8s_elastic.py         # Kubernetes distributed job launcher
+│       │   └── k8s_elastic.py           # Kubernetes distributed job launcher
 │       └── models/                      # Architecture Blocks
 │           ├── transformer_blocks.py    # LLaMA/Mistral layers with    
                                                 #gradient recomputation
