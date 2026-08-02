@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡ VortexGrid-Engine
+# VortexGrid-Engine
 
 ### Production Distributed LLM Training Platform
 
